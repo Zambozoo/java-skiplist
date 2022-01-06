@@ -1,2 +1,2 @@
 # java-skiplist
-Several Java implementations of SkipLists
+A Java implementation of an Indexable [SkipList](https://en.wikipedia.org/wiki/Skip_list)
