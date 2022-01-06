@@ -14,6 +14,12 @@ public class SkipList<E> extends AbstractSequentialList<E>
         Node<F>[] nextArr;
         Node<F>[] prevArr;
         int[] distArr;//Distance to next node.
+
+        /***
+         * Generates a node with a specified height.
+         * @param value Value of generated node.
+         * @param depth Depth of generated node, [1, 32]
+         */
         @SuppressWarnings("unchecked")
         public Node(F value, int depth) {
             this.value = value;
@@ -21,35 +27,71 @@ public class SkipList<E> extends AbstractSequentialList<E>
             nextArr = new Node[depth];
             distArr = new int[depth];
         }
+
+        /***
+         * Generates a new node with a random height between 1 and 32.
+         * probability(height) = 2 ^ -height
+         * @param value Value of generated node
+         */
         public Node(F value) {
             this(value, Integer.numberOfTrailingZeros(RANDOM.nextInt() << 1));
         }
     }
+
     private Node<E> head = new Node<>(null, MAX_DEPTH);
     private int size;
+
     private static final int MAX_DEPTH = 32;
     private static final Random RANDOM = new Random();
+
+    /***
+     * Initializes an empty SkipList.
+     * Produces an empty head node.
+     */
     public SkipList() {
         Arrays.fill(head.distArr, 1);
     }
+
+    /***
+     * Initializes a populated SkipList.
+     * @param c Collection to populate SkipList
+     */
     public SkipList(Collection<? extends E> c) {
         addAll(c);
     }
     //endregion
 
     //region Get
+
+    /***
+     * @return True if SkipList has a size of 0
+     */
     @Override
     public boolean isEmpty() {
         return size == 0;
     }
+
+    /***
+     * @return Amount of elements in SkipList, [0, INT_MAX]
+     */
     @Override
     public int size() {
         return size;
     }
+
+    /***
+     * @param o Object to query
+     * @return True if Object is an element of SkipList
+     */
     @Override
     public boolean contains(Object o) {
         return indexOf(o) >= 0;
     }
+
+    /***
+     * @param o Object to query
+     * @return First index of Object, or -1 if not present
+     */
     @Override
     public int indexOf(Object o) {
         int index = 0;
@@ -70,6 +112,11 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return -1;
     }
+
+    /***
+     * @param o Object to query
+     * @return Last index of object, or -1 if not present.
+     */
     @Override
     public int lastIndexOf(Object o) {
         int index = size;
@@ -90,6 +137,11 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return -1;
     }
+
+    /***
+     * @param index Index of requested element.
+     * @return Value of element at requested index.
+     */
     @Override
     public E get(int index) {
         return getNode(index).value;
@@ -108,6 +160,11 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return curNode;
     }
+
+    /***
+     * @exception NoSuchElementException Thrown if SkipList is empty
+     * @return First element in SkipList
+     */
     @Override
     public E getFirst() {
         if(size == 0) {
@@ -115,6 +172,11 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return head.nextArr[0].value;
     }
+
+    /***
+     * @exception NoSuchElementException Thrown if SkipList is empty
+     * @return Last element in SkipList
+     */
     @Override
     public E getLast() {
         if(size == 0) {
@@ -122,42 +184,92 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return head.prevArr[0].value;
     }
-    @Override
-    public E peekFirst() {
-        return (size == 0) ? null : getFirst();
-    }
-    @Override
-    public E peekLast() {
-        return (size == 0) ? null : getLast();
-    }
+
+    /***
+     * @exception NoSuchElementException Thrown if SkipList is empty
+     * @return First element in SkipList
+     */
     @Override
     public E element() {
         return getFirst();
     }
+
+    /***
+     * @return First element in SkipList, or null if empty
+     */
+    @Override
+    public E peekFirst() {
+        return (size == 0) ? null : getFirst();
+    }
+
+    /***
+     * @return Last element in SkipList, or null if empty
+     */
+    @Override
+    public E peekLast() {
+        return (size == 0) ? null : getLast();
+    }
+
+    /***
+     * @return First element in SkipList, or null if empty
+     */
     @Override
     public E peek() {
-        return (size == 0) ? null : getFirst();
+        return peekFirst();
     }
     //endregion
 
     //region Add
+    /**
+     * Append element to SkipList.
+     * @param e Element to be appended.
+     * @return True if successful.
+     */
+    @Override
+    public boolean add(E e) {
+        addLast(e);
+        return true;
+    }
+
+    /**
+     * Prepend element to SkipList.
+     * @param e Element to be prepended.
+     * @return True if successful.
+     */
     @Override
     public boolean offerFirst(E e) {
         addFirst(e);
         return true;
     }
+
+    /**
+     * Append element to SkipList.
+     * @param e Element to be appended.
+     * @return True if successful.
+     */
     @Override
     public boolean offerLast(E e) {
-        addLast(e);
-        return true;
+        return add(e);
     }
+
+    /**
+     * Append element to SkipList.
+     * @param e Element to be appended.
+     * @return True if successful.
+     */
     @Override
     public boolean offer(E e) {
         return add(e);
     }
+
+    /**
+     * Append element to SkipList.
+     * @param e Element to be appended.
+     * @return True if successful.
+     */
     @Override
-    public void addLast(E value) {
-        Node<E> n = new Node<>(value);
+    public void addLast(E e) {
+        Node<E> n = new Node<>(e);
         int i = MAX_DEPTH - 1;
         //Rows[depth >= n.length][-1] == null
         for(; i >= n.distArr.length && head.prevArr[i] == null; i--) {
@@ -181,9 +293,14 @@ public class SkipList<E> extends AbstractSequentialList<E>
         Arrays.fill(n.distArr, 1);
         size++;
     }
+
+    /**
+     * Prepend element to SkipList.
+     * @param e Element to be appended.
+     */
     @Override
-    public void addFirst(E value) {
-        Node<E> n = new Node<>(value);
+    public void addFirst(E e) {
+        Node<E> n = new Node<>(e);
         int i = MAX_DEPTH - 1;
         //Rows[depth >= n.length][0] == null
         for(; i >= n.distArr.length; i--) {
@@ -206,15 +323,16 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         size++;
     }
+
+    /**
+     * Insert element into SkipList.
+     * @param index Index to insert Element
+     * @param e Element to be appended.
+     */
     @Override
-    public boolean add(E value) {
-        addLast(value);
-        return true;
-    }
-    @Override
-    public void add(int index, E value) {
+    public void add(int index, E e) {
         if(index >= 0 && index <= size) {
-            Node<E> n =new Node<>(value);
+            Node<E> n =new Node<>(e);
             Node<E> curNode = head;
             int i = MAX_DEPTH - 1;
             //Rows[depth >= n.length][0]
@@ -249,10 +367,22 @@ public class SkipList<E> extends AbstractSequentialList<E>
             throw new NoSuchElementException();
         }
     }
+
+    /**
+     * Prepend element to SkipList.
+     * @param e Element to be appended.
+     */
     @Override
-    public void push(E value) {
-        addFirst(value);
+    public void push(E e) {
+        addFirst(e);
     }
+
+
+    /**
+     * @param index Index to set
+     * @param element Value to set
+     * @return Value if valid index, else null
+     */
     @Override
     public E set(int index, E element) {
         Node<E> n = getNode(index);
@@ -266,6 +396,10 @@ public class SkipList<E> extends AbstractSequentialList<E>
     //endregion
 
     //region Delete
+
+    /**
+     * Clear all elements from SkipList.
+     */
     @Override
     public void clear() {
         size = 0;
@@ -273,10 +407,37 @@ public class SkipList<E> extends AbstractSequentialList<E>
         Arrays.fill(head.nextArr, null);
         Arrays.fill(head.prevArr, null);
     }
+
+    /**
+     * Removes first instance of Object.
+     * @param o Object to be removed.
+     * @return True if successful.
+     */
+    @Override
+    public boolean remove(Object o) {
+        int i = indexOf(o);
+        if(i >= 0) {
+            remove(i);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes first instance of Object.
+     * @param o Object to be removed.
+     * @return True if successful.
+     */
     @Override
     public boolean removeFirstOccurrence(Object o) {
         return remove(o);
     }
+
+    /**
+     * Removes last instance of Object.
+     * @param o Object to be removed.
+     * @return True if successful.
+     */
     @Override
     public boolean removeLastOccurrence(Object o) {
         int i = lastIndexOf(o);
@@ -286,6 +447,46 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return false;
     }
+
+    /**
+     * Removes first element of SkipList.
+     * @throws NoSuchElementException Thrown if list is empty.
+     * @return Value of removed element.
+     */
+    @Override
+    public E removeFirst() {
+        if (size == 0) {
+            throw new NoSuchElementException();
+        } else {
+            Node<E> n = head.nextArr[0];
+            int i = MAX_DEPTH - 1;
+            //Row[depth >= n.length]
+            for(; i >= n.distArr.length; i--) {
+                head.distArr[i]--;
+            }
+            //Row[depth < n.length].length == 1
+            for(; i >= 0 && n.nextArr[i] == null; i--) {
+                head.nextArr[i] = null;
+                head.prevArr[i] = null;
+                head.distArr[i] += n.distArr[i] - 1;
+            }
+            //Row[depth < n.length].length > 1
+            for(; i >= 0; i--) {
+                //noinspection ConstantConditions
+                n.nextArr[i].prevArr[i] = null;
+                head.nextArr[i] = n.nextArr[i];
+                head.distArr[i] += n.distArr[i] - 1;
+            }
+            size--;
+            return n.value;
+        }
+    }
+
+    /**
+     * Removes last element of SkipList.
+     * @throws NoSuchElementException Thrown if list is empty.
+     * @return Value of removed element.
+     */
     @Override
     public E removeLast() {
         if (size == 0) {
@@ -318,38 +519,23 @@ public class SkipList<E> extends AbstractSequentialList<E>
             return n.value;
         }
     }
-    @Override
-    public E removeFirst() {
-        if (size == 0) {
-            throw new NoSuchElementException();
-        } else {
-            Node<E> n = head.nextArr[0];
-            int i = MAX_DEPTH - 1;
-            //Row[depth >= n.length]
-            for(; i >= n.distArr.length; i--) {
-                head.distArr[i]--;
-            }
-            //Row[depth < n.length].length == 1
-            for(; i >= 0 && n.nextArr[i] == null; i--) {
-                head.nextArr[i] = null;
-                head.prevArr[i] = null;
-                head.distArr[i] += n.distArr[i] - 1;
-            }
-            //Row[depth < n.length].length > 1
-            for(; i >= 0; i--) {
-                //noinspection ConstantConditions
-                n.nextArr[i].prevArr[i] = null;
-                head.nextArr[i] = n.nextArr[i];
-                head.distArr[i] += n.distArr[i] - 1;
-            }
-            size--;
-            return n.value;
-        }
-    }
+
+    /**
+     * Removes first element of SkipList.
+     * @throws NoSuchElementException Thrown if list is empty.
+     * @return Value of removed element.
+     */
     @Override
     public E remove() {
         return removeFirst();
     }
+
+    /**
+     * Removes Element at requested index of SkipList.
+     * @param index Index to be removed, [0, size)
+     * @throws NoSuchElementException Thrown if index is invalid.
+     * @return Value of removed element if valid index, else null.
+     */
     @Override
     public E remove(int index) {
         if(index >= 0 && index < size) {
@@ -379,27 +565,40 @@ public class SkipList<E> extends AbstractSequentialList<E>
             throw new NoSuchElementException();
         }
     }
-    @Override
-    public boolean remove(Object o) {
-        int i = indexOf(o);
-        if(i >= 0) {
-            remove(i);
-            return true;
-        }
-        return false;
-    }
+
+    /**
+     * Removes first element of SkipList.
+     * @return Value of removed element, or null if SkipList is empty.
+     */
     @Override
     public E poll() {
         return (size == 0) ? null : removeFirst();
     }
+
+    /**
+     * Removes first element of SkipList.
+     * @return Value of removed element, or null if SkipList is empty.
+     */
     @Override
     public E pollFirst() {
         return (size == 0) ? null : removeFirst();
     }
+
+    /**
+     * Removes last element of SkipList.
+     * @return Value of removed element, or null if SkipList is empty.
+     */
     @Override
     public E pollLast() {
         return (size == 0) ? null : removeLast();
     }
+
+
+    /**
+     * Removes first element of SkipList.
+     * @throws NoSuchElementException Thrown if list is empty.
+     * @return Value of removed element, or null if SkipList is empty.
+     */
     @Override
     public E pop() {
         return removeFirst();
@@ -407,6 +606,10 @@ public class SkipList<E> extends AbstractSequentialList<E>
     //endregion
 
     //region Copy
+
+    /**
+     * @return Array of elements in SkipList in order.
+     */
     @Override
     public Object[] toArray() {
         Object[] result = new Object[size];
@@ -418,6 +621,10 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return result;
     }
+
+    /**
+     * @return Array of elements in SkipList in order.
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
@@ -435,18 +642,14 @@ public class SkipList<E> extends AbstractSequentialList<E>
         }
         return a;
     }
-    @SuppressWarnings("unchecked")
-    private SkipList<E> superClone() {
-        try {
-            return (SkipList<E>) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError(e);
-        }
-    }
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
+
+    /**
+     * @return Shallow copy of SkipList.
+     */
     @Override
-    public Object clone() {
-        SkipList<E> clone = superClone();
+    public Object clone() throws CloneNotSupportedException {
+        SkipList<E> clone = (SkipList<E>) super.clone();
+
         clone.head = null;
         clone.size = 0;
         for (Node<E> x = head.nextArr[0]; x != null; x = x.nextArr[0])
@@ -454,6 +657,12 @@ public class SkipList<E> extends AbstractSequentialList<E>
 
         return clone;
     }
+
+    /**
+     * Writes object state to Output Stream.
+     * @param s Output Stream to write to.
+     * @throws java.io.IOException Thrown if an I/O error occurs.
+     */
     @java.io.Serial
     private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
         s.defaultWriteObject();
@@ -461,8 +670,14 @@ public class SkipList<E> extends AbstractSequentialList<E>
         for (Node<E> x = head.nextArr[0]; x != null; x = x.nextArr[0])
             s.writeObject(x.value);
     }
+
+    /**
+     * Reads object state from Input Stream.
+     * @param s Input Stream to read from.
+     * @throws java.io.IOException Thrown if an I/O error occurs.
+     * @throws ClassNotFoundException Thrown if the class of a serialized object could not be found.
+     */
     @java.io.Serial
-    @SuppressWarnings("unchecked")
     private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
         s.defaultReadObject();
         int size = s.readInt();
@@ -472,17 +687,35 @@ public class SkipList<E> extends AbstractSequentialList<E>
     //endregion
 
     //region Iterate
+
+    /**
+     * Returns an ordered list-iterator of the elements in SkipList, starting at the specified index.
+     * @param index Index to begin at.
+     * @return List-Iterator of SkipList.
+     */
     @Override
     public ListIterator<E> listIterator(int index) {
         return new SkipListIterator(index);
     }
+
+    /**
+     * @return Ordered iterator over the elements in SkipList.
+     */
     @Override
     public Iterator<E> iterator(){
         return new ForwardIterator();
     }
+
+    /**
+     * @return Reverse order iterator over the elements in SkipList.
+     */
     public Iterator<E> descendingIterator() {
         return new DescendingIterator();
     }
+
+    /**
+     * Iterator Class for ListIterator
+     */
     class SkipListIterator implements ListIterator<E>{
         Node<E> curNode;
         int index = 0;
@@ -492,6 +725,7 @@ public class SkipList<E> extends AbstractSequentialList<E>
             this.index = index;
             curNode = getNode(index);
         }
+
         public SkipListIterator(){
             curNode = head == null ? null : head.nextArr[0];
         }
@@ -564,6 +798,10 @@ public class SkipList<E> extends AbstractSequentialList<E>
             SkipList.this.add(index++, e);
         }
     }
+
+    /**
+     * ForwardIterator class for Iterator
+     */
     class ForwardIterator implements Iterator<E> {
         Node<E> curNode;
         public ForwardIterator() {
@@ -582,6 +820,10 @@ public class SkipList<E> extends AbstractSequentialList<E>
             return value;
         }
     }
+
+    /**
+     * DescendingIterator class for descendingIterator
+     */
     class DescendingIterator implements Iterator<E>{
         Node<E> curNode;
         public DescendingIterator(){
@@ -600,6 +842,9 @@ public class SkipList<E> extends AbstractSequentialList<E>
     }
     //endregion
 
+    /**
+     * @return Verbose String representation of SkipList.
+     */
     @SuppressWarnings({"StringConcatenationInLoop", "unused"})
     private String toStringVerbose(){
         String result = "Size:" + size;
